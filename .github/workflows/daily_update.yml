@@ -2,9 +2,11 @@ name: Daily Repo Update
 
 on:
   schedule:
-    # Runs exactly at 00:00 UTC every day (No wildcards)
-    - cron: '0 0 * * *'
-  workflow_dispatch: # Allows manual trigger for testing
+    - cron: '30 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write  # Crucial: This grants the token push access
 
 jobs:
   automated-commit:
@@ -12,15 +14,18 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetches history to avoid push errors
 
-      - name: Update Log for 22f3002211@ds.study.iitm.ac.in
+      - name: Update Activity Log with 22f3002211@ds.study.iitm.ac.in
         run: |
-          echo "Last updated on: $(date)" > activity_log.txt
+          echo "Last run: $(date)" >> activity.txt
 
       - name: Commit and Push
         run: |
-          git config --global user.name "DevSync Bot"
+          git config --global user.name "DevSync Automation"
           git config --global user.email "22f3002211@ds.study.iitm.ac.in"
-          git add activity_log.txt
-          git commit -m "Automated daily update: $(date)"
-          git push
+          git add activity.txt
+          # Only commit if there are changes to avoid "nothing to commit" errors
+          git diff --quiet && git diff --staged --quiet || git commit -m "Automated update: $(date)"
+          git push origin main
